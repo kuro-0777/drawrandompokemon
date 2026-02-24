@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Stage, Layer, Line, Rect } from 'react-konva'
 
 type LineType = { points: number[]; stroke: string; strokeWidth: number }
