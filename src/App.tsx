@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react'
 import DrawingBoard from './components/DrawingBoard'
-import {Button, ButtonGroup} from "@heroui/button";
-import Notification from './components/Notification';
-
 
 function parseCSV(text: string): string[][] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim() !== '')
