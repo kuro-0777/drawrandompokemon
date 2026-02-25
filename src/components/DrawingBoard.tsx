@@ -1,18 +1,51 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Stage, Layer, Line, Rect } from 'react-konva'
+import { Popover, PopoverTrigger, PopoverContent } from '@heroui/popover'
 
 type LineType = { points: number[]; stroke: string; strokeWidth: number }
 
-export default function DrawingBoard() {
+type Props = { pokemonName?: string }
+
+export default function DrawingBoard({ pokemonName }: Props) {
   const [lines, setLines] = useState<LineType[]>([])
   const [color, setColor] = useState<string>('#000000')
   const [brush, setBrush] = useState<number>(3)
   const isDrawing = useRef(false)
+  const stageRef = useRef<any>(null)
+  const undoStack = useRef<LineType[][]>([])
+  const redoStack = useRef<LineType[][]>([])
+
+  // push current state to undo stack
+  const pushUndo = (snapshot: LineType[]) => {
+    undoStack.current.push(snapshot.map((l) => ({ ...l, points: [...l.points] })))
+    // limit history to 100
+    if (undoStack.current.length > 100) undoStack.current.shift()
+  }
+
+  const undo = () => {
+    const u = undoStack.current
+    if (u.length === 0) return
+    const prev = u.pop()!
+    redoStack.current.push(lines.map((l) => ({ ...l, points: [...l.points] })))
+    setLines(prev)
+  }
+
+  const redo = () => {
+    const r = redoStack.current
+    if (r.length === 0) return
+    const next = r.pop()!
+    undoStack.current.push(lines.map((l) => ({ ...l, points: [...l.points] })))
+    setLines(next)
+  }
 
   const handlePointerDown = (e: any) => {
     isDrawing.current = true
     const pos = e.target.getStage().getPointerPosition()
     if (!pos) return
+    // record snapshot before new stroke
+    pushUndo(lines)
+    // new action invalidates redo
+    redoStack.current = []
     setLines((prev) => [...prev, { points: [pos.x, pos.y], stroke: color, strokeWidth: brush }])
   }
 
@@ -36,38 +69,184 @@ export default function DrawingBoard() {
 
   const clear = () => setLines([])
 
+  const save = () => {
+    if (!stageRef.current) return
+    const dataURL = stageRef.current.toDataURL({ pixelRatio: 2 })
+    const link = document.createElement('a')
+    link.href = dataURL
+    link.download = 'drawing.png'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  }
+
+  const [hintImage, setHintImage] = useState<string | null>(null)
+  const [hintLoading, setHintLoading] = useState(false)
+  const [hintError, setHintError] = useState<string | null>(null)
+
+  const fetchHint = async () => {
+    if (!pokemonName) {
+      setHintError('No Pokémon selected')
+      return
+    }
+    setHintLoading(true)
+    setHintError(null)
+    setHintImage(null)
+    try {
+      const name = encodeURIComponent(pokemonName.toLowerCase().trim())
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`)
+      const data = await res.json()
+      const url = data?.sprites?.front_default || null
+      if (!url) {
+        setHintError('No sprite available')
+      } else {
+        setHintImage(url)
+      }
+    } catch (err: any) {
+      setHintError(err?.message || 'Failed to fetch')
+    } finally {
+      setHintLoading(false)
+    }
+  }
+
+  // keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const z = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z'
+      const y = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y'
+      const shiftZ = (e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z'
+      if (z && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+      } else if (y || shiftZ) {
+        e.preventDefault()
+        redo()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 8 }}>
-        <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          Color:
-          <input
-            aria-label="Color picker"
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-          />
-        </label>
+    <div className="flex flex-col items-center">
+      <div className="w-[600px] max-w-full flex items-center gap-3 mb-2">
+        <div className="flex-shrink-0">
+          <Popover>
+            <PopoverTrigger>
+              <button
+                aria-label="Open color picker"
+                className="rounded-md px-3 py-2 flex items-center gap-2"
+                style={{ backgroundColor: 'transparent' }}
+              >
+                <span className="w-4 h-4 border" style={{ backgroundColor: color }} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="p-2 rounded-md shadow-lg bg-zinc-900">
+              <div className="flex items-center gap-2">
+                {['red', 'blue', 'green', 'yellow', 'black'].map((c) => (
+                  <button
+                    key={c}
+                    aria-label={`Set color ${c}`}
+                    onClick={() => setColor(c)}
+                    className="w-6 h-6 rounded-full border"
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+                <input
+                  aria-label="Color picker"
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="h-8 w-8 p-0 border-none"
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
-        <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          Brush:
-          <input
-            aria-label="Brush size"
-            type="range"
-            min={1}
-            max={40}
-            value={brush}
-            onChange={(e) => setBrush(Number(e.target.value))}
-          />
-          <span style={{ minWidth: 28, textAlign: 'center' }}>{brush}px</span>
-        </label>
+        <div className="flex gap-1.5 items-center min-w-0 flex-1">
+          <Popover>
+            <PopoverTrigger>
+              <button className="rounded-md px-3 py-2">Brush</button>
+            </PopoverTrigger>
+            <PopoverContent className="p-3 rounded-md shadow-lg bg-zinc-900">
+              <div className="flex items-center gap-2">
+                <input
+                  aria-label="Brush size"
+                  type="range"
+                  min={1}
+                  max={40}
+                  value={brush}
+                  onChange={(e) => setBrush(Number(e.target.value))}
+                  className="w-40"
+                />
+                <span className="min-w-[28px] text-center">{brush}px</span>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
-        <button onClick={clear}>Clear</button>
+        <div className="flex-shrink-0">
+          <Popover>
+            <PopoverTrigger>
+              <button onClick={fetchHint} className="rounded-md px-3 py-2">Hint</button>
+            </PopoverTrigger>
+            <PopoverContent className="p-3 rounded-md shadow-lg bg-zinc-900">
+              <div className="w-[220px] h-[220px] flex items-center justify-center">
+                {hintLoading ? (
+                  <span>Loading...</span>
+                ) : hintError ? (
+                  <span className="text-sm">{hintError}</span>
+                ) : hintImage ? (
+                  <img
+                    src={hintImage}
+                    alt="hint"
+                    className="max-w-full max-h-full"
+                    style={{ filter: 'blur(6px)', objectFit: 'contain' }}
+                  />
+                ) : (
+                  <span className="text-sm">No hint available</span>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            onClick={undo}
+            className="rounded-md border border-transparent px-3 py-2 bg-[var(--button-bg,#1a1a1a)] text-current"
+            aria-label="Undo (Ctrl/Cmd+Z)"
+          >
+            Undo
+          </button>
+          <button
+            onClick={redo}
+            className="rounded-md border border-transparent px-3 py-2 bg-[var(--button-bg,#1a1a1a)] text-current"
+            aria-label="Redo (Ctrl+Y / Ctrl+Shift+Z)"
+          >
+            Redo
+          </button>
+          <button
+            onClick={clear}
+            className="rounded-md border border-transparent px-5 py-2 bg-[var(--button-bg,#1a1a1a)] text-current"
+          >
+            Clear
+          </button>
+          <button
+            onClick={save}
+            className="rounded-md border border-transparent px-5 py-2 bg-[var(--button-bg,#1a1a1a)] text-current"
+          >
+            Save
+          </button>
+        </div>
       </div>
 
       <Stage
-        width={800}
-        height={400}
+        ref={stageRef}
+        width={600}
+        height={600}
         onMouseDown={handlePointerDown}
         onTouchStart={handlePointerDown}
         onMouseMove={handlePointerMove}
@@ -76,7 +255,7 @@ export default function DrawingBoard() {
         onTouchEnd={handlePointerUp}
       >
         <Layer>
-          <Rect x={0} y={0} width={800} height={400} fill="white" />
+          <Rect x={0} y={0} width={600} height={600} fill="white" />
           {lines.map((line, i) => (
             <Line key={i} points={line.points} stroke={line.stroke} strokeWidth={line.strokeWidth} tension={0.5} lineCap="round" />
           ))}

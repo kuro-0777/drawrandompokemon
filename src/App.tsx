@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import './App.css'
 import DrawingBoard from './components/DrawingBoard'
+import {Button, ButtonGroup} from "@heroui/button";
+import Notification from './components/Notification';
+
 
 function parseCSV(text: string): string[][] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim() !== '')
@@ -93,17 +95,37 @@ function App() {
   }
 
   return (
-    <div>
-      <h1>Draw a Pokémon</h1>
-      <div style={{ margin: '12px 0' }}>
+    
+    <div className="flex justify-center content-center w-screen">
+      
+    <div className="flex flex-col max-w-5xl mx-auto p-8 text-center ">
+      <h1 className="text-4xl font-bold mb-4 ">Draw a Pokémon from memory</h1>
+      <h4 className="text-l mb-4 "> (yes thats the whole point of this site)</h4>
+       
+      <div className="my-3 flex flex-row justify-center gap-4 items-center">
         <strong>Random Pokémon:</strong>{' '}
-        <span style={{ fontSize: 20, color: colorFor(selected?.type1) }}>{selected?.name || '—'}</span>
-        <div style={{ marginTop: 8 }}>
+        <span className="text-xl" style={{ color: colorFor(selected?.type1) }}>{selected?.name || '—'}</span>
+        <div className="mt-2">
           <button onClick={randomize}>Randomize Pokémon</button>
         </div>
       </div>
 
-      <DrawingBoard />
+      <DrawingBoard pokemonName={selected?.name} />
+      <p className="opacity-20">Brave shields make it laggy idk why</p>
+    </div>
+
+     <a
+      href="https://github.com/kuro-0777/drawrandompokemon"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed left-4 bottom-4 flex items-center gap-2 text-sm bg-white/5 hover:bg-white/10 text-current px-3 py-1 rounded shadow-sm"
+      aria-label="Star drawrandompokemon on GitHub"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+        <path d="M12 .587l3.668 7.431L24 9.748l-6 5.847L19.335 24 12 19.897 4.665 24 6 15.595 0 9.748l8.332-1.73L12 .587z" />
+      </svg>
+      <span>Star on GitHub</span>
+    </a>
     </div>
   )
 }

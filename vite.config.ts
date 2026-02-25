@@ -1,4 +1,6 @@
 import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite';
 
-// Minimal Vite config placeholder required by tsconfig.node.json
-export default defineConfig({})
+export default defineConfig({
+  plugins: [tailwindcss()],
+});   
