@@ -16,6 +16,7 @@ A small drawing game to play with friends: guess and draw randomly selected PokÃ
 - 1.1 â€” Added undo/redo, hints, save button, and layout improvements
 - 1.1.1 - Removed the default colors and just added a color picker.
 - 1.1.1 - Zoomed the hint a bit because it looked like a smudge.
+- 1.2 - Added Submit option which lets you compare your artwork to official artwork.
 
 
 

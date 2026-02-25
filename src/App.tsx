@@ -104,6 +104,7 @@ fairy:    '#E8A5C5',
         <span className="text-xl" style={{ color: colorFor(selected?.type1) }}>{selected?.name || '—'}</span>
         <div className="mt-2">
           <button onClick={randomize}>Randomize Pokémon</button>
+          
         </div>
       </div>
 

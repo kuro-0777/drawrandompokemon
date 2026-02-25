@@ -10,17 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@heroui/alert": "^2.2.31",
-    "@heroui/card": "^2.2.27",
     "@heroui/react": "^2.8.9",
     "@heroui/system": "^2.4.27",
     "@heroui/theme": "^2.4.26",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.34.3",
     "konva": "^8.4.3",
+    "lucide-react": "^0.575.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-konva": "^19.2.2",
-    "shadcn": "^3.8.5"
+    "shadcn": "^3.8.5",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
