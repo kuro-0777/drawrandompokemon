@@ -77,24 +77,14 @@ export default function DrawingBoard({ pokemonName }: Props) {
     setLines([])
   }
 
-  const save = () => {
-    if (!stageRef.current) return
-    const dataURL = stageRef.current.toDataURL({ pixelRatio: 2 })
-    const link = document.createElement('a')
-    link.href = dataURL
-    link.download = 'drawing.png'
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-  }
 
   const [hintImage, setHintImage] = useState<string | null>(null)
   const [hintLoading, setHintLoading] = useState(false)
   const [hintError, setHintError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
-  const [comparisonLoading, setComparisonLoading] = useState(false)
+  const [_comparisonLoading, setComparisonLoading] = useState(false)
   const [showSavePrompt, setShowSavePrompt] = useState(false)
-  const [saveType, setSaveType] = useState<null | 'drawing' | 'comparison'>(null)
+  const [_saveType, setSaveType] = useState<null | 'drawing' | 'comparison'>(null)
   const [artworkUrl, setArtworkUrl] = useState<string | null>(null)
   const [canvasSnapshot, setCanvasSnapshot] = useState<string | null>(null)
 
