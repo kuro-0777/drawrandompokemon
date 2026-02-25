@@ -67,7 +67,12 @@ export default function DrawingBoard({ pokemonName }: Props) {
     isDrawing.current = false
   }
 
-  const clear = () => setLines([])
+  const clear = () => {
+    // record state before wiping
+    pushUndo(lines)
+    redoStack.current = []
+    setLines([])
+  }
 
   const save = () => {
     if (!stageRef.current) return
@@ -132,37 +137,15 @@ export default function DrawingBoard({ pokemonName }: Props) {
     <div className="flex flex-col items-center">
       <div className="w-[600px] max-w-full flex items-center gap-3 mb-2">
         <div className="flex-shrink-0">
-          <Popover>
-            <PopoverTrigger>
-              <button
-                aria-label="Open color picker"
-                className="rounded-md px-3 py-2 flex items-center gap-2"
-                style={{ backgroundColor: 'transparent' }}
-              >
-                <span className="w-4 h-4 border" style={{ backgroundColor: color }} />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="p-2 rounded-md shadow-lg bg-zinc-900">
-              <div className="flex items-center gap-2">
-                {['red', 'blue', 'green', 'yellow', 'black'].map((c) => (
-                  <button
-                    key={c}
-                    aria-label={`Set color ${c}`}
-                    onClick={() => setColor(c)}
-                    className="w-6 h-6 rounded-full border"
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-                <input
+          <div className="rounded-md px-4 py-1 flex items-center gap-2 border">
+          <input
                   aria-label="Color picker"
                   type="color"
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
                   className="h-8 w-8 p-0 border-none"
-                />
-              </div>
-            </PopoverContent>
-          </Popover>
+                /></div>
+         
         </div>
 
         <div className="flex gap-1.5 items-center min-w-0 flex-1">
@@ -200,10 +183,10 @@ export default function DrawingBoard({ pokemonName }: Props) {
                   <span className="text-sm">{hintError}</span>
                 ) : hintImage ? (
                   <img
-                    src={hintImage}
-                    alt="hint"
-                    className="max-w-full max-h-full"
-                    style={{ filter: 'blur(6px)', objectFit: 'contain' }}
+                  src={hintImage}
+                  alt="hint"
+                  className="max-w-full max-h-full"
+                  style={{ filter: 'blur(6px)', objectFit: 'none', transform: 'scale(1.5)', transformOrigin: 'center center' }}
                   />
                 ) : (
                   <span className="text-sm">No hint available</span>

@@ -14,6 +14,8 @@ A small drawing game to play with friends: guess and draw randomly selected Pok�
 ## Changelog
 - 1.0 — Initial drawing board and basic tools
 - 1.1 — Added undo/redo, hints, save button, and layout improvements
+- 1.1.1 - Removed the default colors and just added a color picker.
+- 1.1.1 - Zoomed the hint a bit because it looked like a smudge.
 
 
 
